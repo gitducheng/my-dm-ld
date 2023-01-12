@@ -1,101 +1,94 @@
 import React, { useEffect, useState } from 'react'
 import { Avatar, Grid } from '@arco-design/web-react'
-import { Role, Skill } from '@/interface'
-import { hurtCompute } from '@/utils'
-
-const myTeam: Role[] = [
-  {
-    name: 'shixiang',
-    talent: 11,
-    hp: 100,
-    mp: 100,
-    attack: 100,
-    defense: 30,
-    reply: 100,
-    roleType: 'hp',
-    attribute: 'stone',
-    skill: 'daliezhan',
-    buff: [],
-    debuff: [],
-  },
-  {
-    name: 'kuangshan',
-    talent: 11,
-    hp: 150,
-    mp: 100,
-    attack: 150,
-    defense: 50,
-    reply: 150,
-    roleType: 'hp',
-    attribute: 'clipper',
-    skill: 'kekedi',
-    buff: [],
-    debuff: [],
-  },
-]
-const skillMap: Record<string, Skill> = {
-  daliezhan: {
-    name: '中文名',
-    type: 'simple',
-    percent: 0.67,
-    effects: [
-      {
-        name: 'weak',
-        type: 'debuff',
-        percent: 66, // 66%
-        round: 3,
-      },
-    ],
-  },
-  kekedi: {
-    name: '中文名2',
-    type: 'whole',
-    percent: 0.33,
-    effects: [],
-  },
-}
+import { Role } from '@/interface'
+import { hurtCompute, sleep } from '@/utils'
+import { myTeam1, myTeam2, skillMap } from '@/data'
 
 const Row = Grid.Row
 const Col = Grid.Col
 
 const Battle: React.FC = () => {
   const [battleResult, setBattleResult] = useState('')
-  const [leftTeam, setLeftTeam] = useState(myTeam)
-  const [rightTeam, setRightTeam] = useState(myTeam)
+  const [leftTeam, setLeftTeam] = useState([...myTeam1])
+  const [rightTeam, setRightTeam] = useState([...myTeam2])
+  const [round, setRound] = useState(1)
+  const [count, setCount] = useState(0)
 
   useEffect(() => {
-    startBattle(leftTeam, rightTeam)
-  }, [])
+    if (battleResult === 'left') {
+      console.log('进攻方胜利')
+      return
+    } else if (battleResult === 'left') {
+      console.log('防守方胜利')
+      return
+    }
 
-  const startBattle = (left: Role[], right: Role[]) => {
-    attackRole(left, right, 0, 0)
+    startBattle(leftTeam, rightTeam, count)
+  }, [count, round, battleResult])
+
+  const startBattle = (left: Role[], right: Role[], count: number) => {
+    if (count < 6) {
+      attackRole(left, right, count, 'left')
+    } else {
+      attackRole(right, left, count - 6, 'right')
+    }
+    // next round
+    if (count === 11) {
+      setCount(0)
+      setRound((r) => r + 1)
+    } else {
+      setCount((r) => r + 1)
+    }
   }
 
   const attackRole = (
     ackTeam: Role[],
     defTeam: Role[],
     ackIndex: number,
-    defIndex: number
+    attacker: string
   ) => {
     const ackRole = ackTeam[ackIndex]
-    const defRole = defTeam[defIndex]
+    if (ackRole === undefined) {
+      return
+    }
+    let defIndex: number
+    const defRole = defTeam?.find((role, index) => {
+      if (role.hp > 0) {
+        defIndex = index
+        return true
+      }
+      return false
+    })
 
-    const hurtResult = hurtCompute(ackRole, defRole, skillMap[ackRole.skill])
-    ackTeam[ackIndex].mp = 50
-    defTeam[defIndex] = {
-      ...defRole,
-      hp: defRole.hp - hurtResult.hurtValue,
-      buff: hurtResult.buff,
-      debuff: hurtResult.debuff,
+    if (defIndex === undefined) {
+      setBattleResult(attacker)
+      return
     }
 
-    setLeftTeam([...leftTeam])
-    setRightTeam([...defTeam])
-    console.log(hurtResult)
+    // 动画过程
+    sleep(1000)
+
+    // 1v1战斗结果
+    ackTeam[ackIndex].mp = ackTeam[ackIndex].mp + 50
+    const hurtResult = hurtCompute(ackRole, defRole, skillMap[ackRole.skill])
+    if (defRole.hp - hurtResult.hurtValue <= 0) {
+      defTeam.splice(defIndex, 1)
+    } else {
+      defTeam[defIndex] = {
+        ...defRole,
+        hp: defRole.hp - hurtResult.hurtValue,
+        buff: hurtResult.buff,
+        debuff: hurtResult.debuff,
+      }
+    }
+
+    setLeftTeam(attacker === 'left' ? [...ackTeam] : [...defTeam])
+    setRightTeam(attacker === 'left' ? [...defTeam] : [...ackTeam])
   }
 
   return (
     <div>
+      {count}
       <Row>
         <Col span={12}>
           {leftTeam.map((role, index) => {
