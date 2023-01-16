@@ -43,3 +43,9 @@ export const sleep = (time: number) => {
   let now = Date.now()
   while (Date.now() - now < time) {}
 }
+
+export const roleAnimation = (
+  parentID: string,
+  ackDom: string,
+  defDom: string
+) => {}

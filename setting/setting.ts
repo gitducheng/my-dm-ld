@@ -39,10 +39,10 @@ const skills: Record<string, Skill> = {
         effects: [{
             name: "weak",
             type: "debuff",
-            percent: 33, // 33%
+            percent: 33,
             round: 3
         }],
-        
+
     },
     kekedi: {
         name: "中文名2",

@@ -37,6 +37,8 @@ export const skillMap: Record<string, Skill> = {
       buff: [],
       debuff: [],
     },
+    undefined,
+    undefined,
     {
       name: 'kuangshan',
       talent: 11,
@@ -51,6 +53,7 @@ export const skillMap: Record<string, Skill> = {
       buff: [],
       debuff: [],
     },
+    undefined
   ]
   export const myTeam2: Role[] = [
     {
